@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="영근님의 실전 회식 정산기", layout="centered")
 
-st.title("🍺 실전 회식 정산기 (N차 통합)")
+st.title("🍺 Dutch-Pay 계산기")
 
 # 1. 멤버 설정 (수정된 명단입니다!)
 all_members = ["범준", "범수", "승원", "수민", "유현", "가윤"]
