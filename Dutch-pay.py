@@ -10,7 +10,7 @@ all_members = ["범준", "범수", "승원", "수민", "유현", "가윤"]
 st.info("💡 각 차수별로 참석자와 금액을 입력하면 마지막에 총액을 계산해 드립니다.")
 
 # 데이터 저장용 변수
-rounds = ["1차", "2차", "3차"]
+rounds = ["1차", "2차", "3차", "4차", "5차"]
 total_summary = {name: 0 for name in all_members}
 
 for rd in rounds:
