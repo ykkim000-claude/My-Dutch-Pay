@@ -92,17 +92,16 @@ st.header("💰 최종 정산 합계")
 if st.button("전체 결과 확인하기"):
     has_data = False
     
-    # 📱 모바일 화면에서 표가 깨지지 않도록 가로 스크롤(overflow-x: auto)을 지원하는 컨테이너 추가
-    # 텍스트가 강제로 줄바꿈되지 않도록 white-space: nowrap 적용
+    # 💥 핵심 해결책: 표 내부의 모든 셀(th, td)에 white-space: nowrap !important 를 주어 줄바꿈을 절대 금지함
     table_html = """
-    <div style='width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 10px 0;'>
-        <table style='width:100%; min-width: 450px; border-collapse: collapse; white-space: nowrap;'>
+    <div style='width: 100%; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; border: 1px solid #eee; border-radius: 5px; margin: 10px 0;'>
+        <table style='width: 100%; min-width: 500px; border-collapse: collapse;'>
             <thead>
                 <tr style='background-color: #f0f2f6; border-bottom: 2px solid #ccc;'>
-                    <th style='padding: 10px; text-align: left; font-size: 14px;'>차수 [장소]</th>
-                    <th style='padding: 10px; text-align: right; font-size: 14px;'>총 금액</th>
-                    <th style='padding: 10px; text-align: right; font-size: 14px;'>인당 금액</th>
-                    <th style='padding: 10px; text-align: left; padding-left: 15px; font-size: 14px;'>참석자</th>
+                    <th style='padding: 10px; text-align: left; font-size: 14px; white-space: nowrap !important;'>차수 [장소]</th>
+                    <th style='padding: 10px; text-align: right; font-size: 14px; white-space: nowrap !important;'>총 금액</th>
+                    <th style='padding: 10px; text-align: right; font-size: 14px; white-space: nowrap !important;'>인당 금액</th>
+                    <th style='padding: 10px; text-align: left; padding-left: 15px; font-size: 14px; white-space: nowrap !important;'>참석자</th>
                 </tr>
             </thead>
             <tbody>
@@ -113,10 +112,10 @@ if st.button("전체 결과 확인하기"):
             info = round_details[rd]
             table_html += f"""
             <tr style='border-bottom: 1px solid #eee;'>
-                <td style='padding: 10px; font-weight: bold; font-size: 14px;'>{info['차수']} [{info['장소']}]</td>
-                <td style='padding: 10px; text-align: right; font-size: 14px;'>{info['총 금액']}</td>
-                <td style='padding: 10px; text-align: right; color: #ff4b4b; font-weight: bold; font-size: 14px;'>{info['인당 금액']}</td>
-                <td style='padding: 10px; text-align: left; padding-left: 15px; font-size: 13px; color: #555;'>{info['참석자']}</td>
+                <td style='padding: 10px; font-weight: bold; font-size: 14px; white-space: nowrap !important;'>{info['차수']} [{info['장소']}]</td>
+                <td style='padding: 10px; text-align: right; font-size: 14px; white-space: nowrap !important;'>{info['총 금액']}</td>
+                <td style='padding: 10px; text-align: right; color: #ff4b4b; font-weight: bold; font-size: 14px; white-space: nowrap !important;'>{info['인당 금액']}</td>
+                <td style='padding: 10px; text-align: left; padding-left: 15px; font-size: 13px; color: #555; white-space: nowrap !important;'>{info['참석자']}</td>
             </tr>
             """
             has_data = True
