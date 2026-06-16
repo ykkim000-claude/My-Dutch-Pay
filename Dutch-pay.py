@@ -20,10 +20,10 @@ if "result" in query_params:
     in_table = False
     
     for line in lines:
-        if line.strip().startswith("<table") or in_table:
+        if line.strip().startswith("<div") or line.strip().startswith("<table") or in_table:
             in_table = True
             html_buffer += line + "\n"
-            if line.strip().endswith("</table>"):
+            if line.strip().endswith("</div>") or line.strip().endswith("</table>"):
                 st.markdown(html_buffer, unsafe_allow_html=True)
                 html_buffer = ""
                 in_table = False
@@ -92,18 +92,20 @@ st.header("💰 최종 정산 합계")
 if st.button("전체 결과 확인하기"):
     has_data = False
     
-    # 1. HTML을 이용한 깔끔한 표 양식 설계
+    # 📱 모바일 화면에서 표가 깨지지 않도록 가로 스크롤(overflow-x: auto)을 지원하는 컨테이너 추가
+    # 텍스트가 강제로 줄바꿈되지 않도록 white-space: nowrap 적용
     table_html = """
-    <table style='width:100%; border-collapse: collapse; margin: 10px 0;'>
-        <thead>
-            <tr style='background-color: #f0f2f6; border-bottom: 2px solid #ccc;'>
-                <th style='padding: 8px; text-align: left;'>차수 [장소]</th>
-                <th style='padding: 8px; text-align: right;'>총 금액</th>
-                <th style='padding: 8px; text-align: right;'>인당 금액</th>
-                <th style='padding: 8px; text-align: left; padding-left: 15px;'>참석자</th>
-            </tr>
-        </thead>
-        <tbody>
+    <div style='width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 10px 0;'>
+        <table style='width:100%; min-width: 450px; border-collapse: collapse; white-space: nowrap;'>
+            <thead>
+                <tr style='background-color: #f0f2f6; border-bottom: 2px solid #ccc;'>
+                    <th style='padding: 10px; text-align: left; font-size: 14px;'>차수 [장소]</th>
+                    <th style='padding: 10px; text-align: right; font-size: 14px;'>총 금액</th>
+                    <th style='padding: 10px; text-align: right; font-size: 14px;'>인당 금액</th>
+                    <th style='padding: 10px; text-align: left; padding-left: 15px; font-size: 14px;'>참석자</th>
+                </tr>
+            </thead>
+            <tbody>
     """
     
     for rd in rounds:
@@ -111,15 +113,15 @@ if st.button("전체 결과 확인하기"):
             info = round_details[rd]
             table_html += f"""
             <tr style='border-bottom: 1px solid #eee;'>
-                <td style='padding: 8px; font-weight: bold;'>{info['차수']} [{info['장소']}]</td>
-                <td style='padding: 8px; text-align: right;'>{info['총 금액']}</td>
-                <td style='padding: 8px; text-align: right; color: #ff4b4b; font-weight: bold;'>{info['인당 금액']}</td>
-                <td style='padding: 8px; text-align: left; padding-left: 15px; font-size: 0.9em; color: #555;'>{info['참석자']}</td>
+                <td style='padding: 10px; font-weight: bold; font-size: 14px;'>{info['차수']} [{info['장소']}]</td>
+                <td style='padding: 10px; text-align: right; font-size: 14px;'>{info['총 금액']}</td>
+                <td style='padding: 10px; text-align: right; color: #ff4b4b; font-weight: bold; font-size: 14px;'>{info['인당 금액']}</td>
+                <td style='padding: 10px; text-align: left; padding-left: 15px; font-size: 13px; color: #555;'>{info['참석자']}</td>
             </tr>
             """
             has_data = True
             
-    table_html += "</tbody></table>"
+    table_html += "</tbody></table></div>"
     
     if has_data:
         st.success("오늘의 상세 정산 리포트가 완성되었습니다!")
