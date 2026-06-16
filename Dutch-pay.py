@@ -14,11 +14,22 @@ if "result" in query_params:
     
     st.success("단톡방에서 공유된 상세 정산 내역입니다!")
     
-    # 전달받은 결과를 줄바꿈 기준으로 예쁘게 출력
+    # 전달받은 결과를 줄바꿈 기준으로 출력하되, HTML 코드가 있으면 그대로 렌더링
     lines = decoded_result.split("\n")
+    html_buffer = ""
+    in_table = False
+    
     for line in lines:
-        if line.strip():
-            st.write(line)
+        if line.strip().startswith("<table") or in_table:
+            in_table = True
+            html_buffer += line + "\n"
+            if line.strip().endswith("</table>"):
+                st.markdown(html_buffer, unsafe_allow_html=True)
+                html_buffer = ""
+                in_table = False
+        else:
+            if line.strip():
+                st.markdown(line, unsafe_allow_html=True)
             
     st.divider()
     if st.button("🔄 새로 정산하러 가기"):
@@ -59,10 +70,16 @@ else:
                 dutch_each = amount // len(selected_members)
                 st.warning(f"✅ {rd} 결과: 인당 {dutch_each:,}원 ({len(selected_members)}명)")
                 
-                # 상세 내역 텍스트 만들기 (예: 1차 오뚜기 (66,000원) -> 범수, 승원, 수민)
+                # 상세 내역을 표의 한 행(Row) 데이터로 저장
                 place_disp = place_name if place_name else "미정"
                 members_disp = ", ".join(selected_members)
-                round_details[rd] = f"• **{rd} [{place_disp}]**: {amount:,}원 (인당 {dutch_each:,}원) \n   [참석: {members_disp}]"
+                round_details[rd] = {
+                    "차수": rd,
+                    "장소": place_disp,
+                    "총 금액": f"{amount:,}원",
+                    "인당 금액": f"{dutch_each:,}원",
+                    "참석자": members_disp
+                }
                 
                 for name in selected_members:
                     total_summary[name] += dutch_each
@@ -75,30 +92,55 @@ st.header("💰 최종 정산 합계")
 if st.button("전체 결과 확인하기"):
     has_data = False
     
-    # 1. 차수별 상세 내역 먼저 리포트에 추가
-    final_report = "### 📍 차수별 상세 내역\n"
+    # 1. HTML을 이용한 깔끔한 표 양식 설계
+    table_html = """
+    <table style='width:100%; border-collapse: collapse; margin: 10px 0;'>
+        <thead>
+            <tr style='background-color: #f0f2f6; border-bottom: 2px solid #ccc;'>
+                <th style='padding: 8px; text-align: left;'>차수 [장소]</th>
+                <th style='padding: 8px; text-align: right;'>총 금액</th>
+                <th style='padding: 8px; text-align: right;'>인당 금액</th>
+                <th style='padding: 8px; text-align: left; padding-left: 15px;'>참석자</th>
+            </tr>
+        </thead>
+        <tbody>
+    """
+    
     for rd in rounds:
         if rd in round_details:
-            final_report += round_details[rd] + "\n"
+            info = round_details[rd]
+            table_html += f"""
+            <tr style='border-bottom: 1px solid #eee;'>
+                <td style='padding: 8px; font-weight: bold;'>{info['차수']} [{info['장소']}]</td>
+                <td style='padding: 8px; text-align: right;'>{info['총 금액']}</td>
+                <td style='padding: 8px; text-align: right; color: #ff4b4b; font-weight: bold;'>{info['인당 금액']}</td>
+                <td style='padding: 8px; text-align: left; padding-left: 15px; font-size: 0.9em; color: #555;'>{info['참석자']}</td>
+            </tr>
+            """
             has_data = True
             
-    final_report += "\n---\n\n### 💳 개인별 최종 송금액\n"
-    
-    # 2. 개인별 최종 금액 추가
-    for name, total in total_summary.items():
-        if total > 0:
-            final_report += f"👉 **{name}**: {total:,}원\n"
+    table_html += "</tbody></table>"
     
     if has_data:
+        st.success("오늘의 상세 정산 리포트가 완성되었습니다!")
+        
+        # 화면 출력용 마크다운 조립
+        st.markdown("### 📍 차수별 상세 내역")
+        st.markdown(table_html, unsafe_allow_html=True)
+        
+        final_report = "\n### 💳 개인별 최종 송금액\n"
+        for name, total in total_summary.items():
+            if total > 0:
+                final_report += f"👉 **{name}**: {total:,}원\n"
+                
         grand_total = sum(total_summary.values())
         final_report += f"\n📋 **오늘 총 지출액:** {grand_total:,}원"
         
-        st.success("오늘의 상세 정산 리포트가 완성되었습니다!")
         st.markdown(final_report)
         
-        # 주소창에 넣을 공유 링크 생성 (가독성을 위해 약간의 태그 정리)
-        clean_report = final_report.replace("**", "").replace("### ", "[ ").replace("\n", "\n")
-        encoded_report = urllib.parse.quote(clean_report) 
+        # 🔗 공유용 링크에 포함할 텍스트 포맷 구성 (표와 최종 송금액 합치기)
+        full_report_text = "### 📍 차수별 상세 내역\n" + table_html + "\n" + final_report
+        encoded_report = urllib.parse.quote(full_report_text) 
         
         share_url = f"https://young-dutch-pay.streamlit.app/?result={encoded_report}"
         
